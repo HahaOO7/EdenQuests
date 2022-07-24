@@ -1,0 +1,13 @@
+name: EdenQuests
+version: '${project.version}'
+main: at.haha007.edenquests.EdenQuests
+api-version: 1.18
+authors: [ Haha007 ]
+depend:
+  - PlaceholderAPI
+  - Vault
+  - ProtocolLib
+#libraries:
+#  - "org.hibernate:hibernate-core:6.1.0.Final"
+#  - "org.postgresql:postgresql:42.4.0"
+#  - "mysql:mysql-connector-java:8.0.29"

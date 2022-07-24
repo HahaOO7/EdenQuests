@@ -1,0 +1,77 @@
+maxDailyQuests: 3
+maxSkips: 1
+defaultMessage:
+  chat: "&aUse &b/quest get&a to get the next quest."
+skipMessage:
+  chat: "&aQuest skipped."
+notEnoughItems:
+  chat: "&aYou don't have enough items to finish this quest."
+quest:
+  chat: "&aYou already have a quest, you can skip one quest a day with '/quest skip'."
+noQuest:
+  chat: "&aYou don't have a Quest, use '/quest get'."
+noQuestLeft:
+  chat: "&aYou can't do more quests."
+noSkipsLeft:
+  chat: "&aYou can't skip more quests."
+
+#types:
+#  collect
+#  mine
+#    allow_silk
+#  kill
+
+quests:
+  mine_redstone_100:
+    messages:
+      get:
+        chat: "&aCollect 100 redstone ore."
+      info:
+        chat: "&aCollect 100 redstone ore."
+      done:
+        chat: "&adone."
+      progress:
+        chat: "&aprogress."
+    type: collect
+    amount: 100
+    filter: [ redstone_ore ]
+    flags: [ allow_silk ]
+    reward:
+      money: 100
+      command: "give %player% iron_nugget"
+      message: "quest finished!"
+  mine_stone_1000:
+    messages:
+      get:
+        chat: "&aMine 100 redstone ore."
+      info:
+        chat: "&aMine 100 redstone ore."
+      done:
+        chat: "&adone."
+      progress:
+        chat: "&aprogress."
+    type: mine
+    amount: 100
+    filter: [ redstone_ore ]
+    flags: [ allow_silk ]
+    reward:
+      money: 100
+      command: "give %player% iron_nugget"
+      message: "quest finished!"
+  kill_creeper_100:
+    messages:
+      get:
+        chat: "&aKill 100 creepers."
+      info:
+        chat: "&aKill 100 creepers."
+      done:
+        chat: "&adone."
+      progress:
+        chat: "&aprogress."
+    type: kill
+    amount: 100
+    filter: [ creeper ]
+    reward:
+      money: 100
+      command: "give %player% iron_nugget"
+      message: "quest finished!"
