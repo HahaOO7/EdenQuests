@@ -84,7 +84,7 @@ public class QuestPlayerController implements Listener {
         }
         Session session = sessionFactory.getCurrentSession();
         session.beginTransaction();
-        session.createMutationQuery("DELETE FROM QuestPlayer");
+        session.createMutationQuery("DELETE FROM QuestPlayer").executeUpdate();
         session.getTransaction().commit();
         session.close();
     }

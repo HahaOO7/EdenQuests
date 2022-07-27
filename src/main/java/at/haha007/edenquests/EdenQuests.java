@@ -14,7 +14,9 @@ import at.haha007.edenquests.quest.Quest;
 import at.haha007.edenquests.quest.QuestHandler;
 import at.haha007.edenquests.quest.QuestType;
 import at.haha007.edenquests.quest.Reward;
+import lombok.Cleanup;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import net.milkbowl.vault.economy.Economy;
@@ -28,7 +30,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-import java.io.File;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.*;
 
 @Accessors(fluent = true)
@@ -50,11 +54,13 @@ public final class EdenQuests extends JavaPlugin {
     private QuestCommand command;
     private QuestPapiExpansion papiExpansion;
     private long lastTick = System.currentTimeMillis();
+    private File lastTickFile;
 
 
     @Override
     public void onEnable() {
         INSTANCE = this;
+        lastTickFile = new File(getDataFolder(), "time.bin");
         initConfigManager();
 
         saveDefaultConfig();
@@ -72,23 +78,42 @@ public final class EdenQuests extends JavaPlugin {
         new QuestHandler(this);
         this.command = new QuestCommand(new CommandRegistry(this));
 
+        loadTime();
+        TimeZone timezone = TimeZone.getTimeZone(ZoneId.of(Objects.requireNonNull(getConfig().getString("timezone"))));
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run() {
                 long now = System.currentTimeMillis();
-                int oldDow = getDow(lastTick);
-                int nextDow = getDow(now);
+                int oldDow = getDay(lastTick);
+                int nextDow = getDay(now);
                 lastTick = now;
                 if (oldDow == nextDow) return;
                 questPlayerController.resetAll();
             }
 
-            int getDow(long time) {
-                Calendar calendar = new GregorianCalendar(Locale.GERMANY);
-                calendar.setTime(new Date(time));
-                return calendar.get(Calendar.DAY_OF_WEEK);
+            int getDay(long time) {
+                SimpleDateFormat sdf = new SimpleDateFormat("DD");
+                sdf.setTimeZone(timezone);
+                String formatted = sdf.format(new Date(time));
+                return formatted.hashCode();
             }
         }, 1, 1200); // once a minute is enough
+    }
+
+    @SneakyThrows
+    private void saveTime() {
+        @Cleanup FileOutputStream fos = new FileOutputStream(lastTickFile);
+        @Cleanup DataOutputStream dos = new DataOutputStream(fos);
+        dos.writeLong(lastTick);
+        dos.flush();
+    }
+
+    @SneakyThrows
+    private void loadTime() {
+        if (!lastTickFile.exists()) saveTime();
+        @Cleanup FileInputStream fis = new FileInputStream(lastTickFile);
+        @Cleanup DataInputStream dis = new DataInputStream(fis);
+        lastTick = dis.readLong();
     }
 
     private void initConfigManager() {
@@ -134,6 +159,7 @@ public final class EdenQuests extends JavaPlugin {
         Optional.ofNullable(papiExpansion).ifPresent(PlaceholderExpansion::unregister);
         HandlerList.unregisterAll(this);
         Bukkit.getScheduler().cancelTasks(this);
+        saveTime();
     }
 
     public void reload() {
