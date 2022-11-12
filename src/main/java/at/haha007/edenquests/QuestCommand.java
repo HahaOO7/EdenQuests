@@ -1,12 +1,12 @@
 package at.haha007.edenquests;
 
-import at.haha007.edencommands.eden.CommandContext;
-import at.haha007.edencommands.eden.CommandException;
-import at.haha007.edencommands.eden.CommandRegistry;
-import at.haha007.edencommands.eden.LiteralCommandNode;
-import at.haha007.edencommands.eden.argument.Argument;
-import at.haha007.edencommands.eden.argument.ParsedArgument;
-import at.haha007.edencommands.eden.argument.PlayerArgument;
+import at.haha007.edencommands.CommandContext;
+import at.haha007.edencommands.CommandException;
+import at.haha007.edencommands.CommandRegistry;
+import at.haha007.edencommands.LiteralCommandNode;
+import at.haha007.edencommands.argument.Argument;
+import at.haha007.edencommands.argument.ParsedArgument;
+import at.haha007.edencommands.argument.PlayerArgument;
 import at.haha007.edenconfig.core.ConfigInjected;
 import at.haha007.edenquests.messages.ConfigurableMessage;
 import at.haha007.edenquests.player.QuestPlayer;
@@ -57,7 +57,8 @@ public class QuestCommand {
     private ConfigurableMessage noSkipsLeft;
 
 
-    public QuestCommand(CommandRegistry registry) {
+    public QuestCommand() {
+        CommandRegistry registry = new CommandRegistry(EdenQuests.INSTANCE);
         plugin.configManager()
                 .createYamlPipeline(new File(plugin.getDataFolder(), "config.yml"))
                 .inject(this);

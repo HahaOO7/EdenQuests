@@ -1,0 +1,10 @@
+{
+  "dependencies": [
+    {
+      "repository": "https://javadoc.jitpack.io/",
+      "group": "com.github.EdenUnited",
+      "artifact": "EdenCommands",
+      "version": "2.2"
+    }
+  ]
+}

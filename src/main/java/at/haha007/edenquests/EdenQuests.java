@@ -1,10 +1,10 @@
 package at.haha007.edenquests;
 
-import at.haha007.edencommands.eden.CommandRegistry;
 import at.haha007.edenconfig.core.InstanceCreatorMap;
 import at.haha007.edenconfig.paper.PaperConfigurationManager;
 import at.haha007.edenconfig.paper.yaml.EnumInstanceCreator;
 import at.haha007.edenconfig.paper.yaml.NoArgsInstanceCreator;
+import at.haha007.edenhibernate.EdenHibernate;
 import at.haha007.edenquests.config.SoundInstanceCreator;
 import at.haha007.edenquests.messages.ConfigurableMessage;
 import at.haha007.edenquests.messages.QuestMessages;
@@ -14,6 +14,7 @@ import at.haha007.edenquests.quest.Quest;
 import at.haha007.edenquests.quest.QuestHandler;
 import at.haha007.edenquests.quest.QuestType;
 import at.haha007.edenquests.quest.Reward;
+import at.haha007.mavenloader.MavenLoader;
 import lombok.Cleanup;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -24,11 +25,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -47,7 +47,7 @@ public final class EdenQuests extends JavaPlugin {
     @Getter
     private Map<String, Quest> questMap;
     @Getter
-    private SessionFactory sessionFactory;
+    private EdenHibernate hibernateProvider;
     @Getter
     private QuestPlayerController questPlayerController;
     @Getter
@@ -61,6 +61,11 @@ public final class EdenQuests extends JavaPlugin {
     public void onEnable() {
         INSTANCE = this;
         lastTickFile = new File(getDataFolder(), "time.bin");
+        try {
+            MavenLoader.loadFromJsonResource(this, "maven-resources.json");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         initConfigManager();
 
         saveDefaultConfig();
@@ -76,7 +81,7 @@ public final class EdenQuests extends JavaPlugin {
         initDatabase();
 
         new QuestHandler(this);
-        this.command = new QuestCommand(new CommandRegistry(this));
+        this.command = new QuestCommand();
 
         loadTime();
         TimeZone timezone = TimeZone.getTimeZone(ZoneId.of(Objects.requireNonNull(getConfig().getString("timezone"))));
@@ -144,18 +149,19 @@ public final class EdenQuests extends JavaPlugin {
     }
 
     private void initDatabase() {
-        saveResource("hibernate.cfg.xml", false);
-        sessionFactory = new Configuration()
-                .configure(new File(this.getDataFolder(), "hibernate.cfg.xml"))
-                .addAnnotatedClass(QuestPlayer.class)
-                .buildSessionFactory();
-        questPlayerController = new QuestPlayerController(sessionFactory);
+        YamlConfiguration cfg = new YamlConfiguration();
+        cfg.set("user", "");
+        cfg.set("password", "");
+        cfg.set("path", "data.db");
+        cfg.set("format", "sqlite");
+        hibernateProvider = new EdenHibernate(this, List.of(QuestPlayer.class), true, Map.of(), cfg);
+        questPlayerController = new QuestPlayerController(hibernateProvider.factory());
     }
 
     @Override
     public void onDisable() {
         Optional.ofNullable(questPlayerController).ifPresent(QuestPlayerController::shutdown);
-        Optional.ofNullable(sessionFactory).ifPresent(SessionFactory::close);
+        Optional.ofNullable(hibernateProvider).ifPresent(EdenHibernate::close);
         Optional.ofNullable(papiExpansion).ifPresent(PlaceholderExpansion::unregister);
         HandlerList.unregisterAll(this);
         Bukkit.getScheduler().cancelTasks(this);
@@ -164,7 +170,7 @@ public final class EdenQuests extends JavaPlugin {
 
     public void reload() {
         HandlerList.unregisterAll(this);
-        command = new QuestCommand(new CommandRegistry(this));
+        command = new QuestCommand();
         reloadConfig();
         new QuestHandler(this);
     }

@@ -5,6 +5,7 @@ import at.haha007.edenquests.player.QuestPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -51,6 +52,8 @@ public class QuestHandler implements Listener {
     void onMobKill(EntityDamageByEntityEvent event) {
         Entity damager = event.getDamager();
         if (!(damager instanceof Player player)) return;
+        if (damager instanceof Arrow arrow && arrow.getShooter() instanceof Entity entity)
+            damager = entity;
 
         Entity entity = event.getEntity();
         if (!(entity instanceof Damageable damageable))
