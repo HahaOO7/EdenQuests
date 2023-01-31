@@ -3,16 +3,17 @@ package at.haha007.edenquests;
 import at.haha007.edencommands.CommandContext;
 import at.haha007.edencommands.CommandException;
 import at.haha007.edencommands.CommandRegistry;
-import at.haha007.edencommands.LiteralCommandNode;
 import at.haha007.edencommands.argument.Argument;
 import at.haha007.edencommands.argument.ParsedArgument;
-import at.haha007.edencommands.argument.PlayerArgument;
+import at.haha007.edencommands.argument.player.OfflinePlayerArgument;
+import at.haha007.edencommands.tree.LiteralCommandNode;
 import at.haha007.edenconfig.core.ConfigInjected;
 import at.haha007.edenquests.messages.ConfigurableMessage;
 import at.haha007.edenquests.player.QuestPlayer;
 import at.haha007.edenquests.player.QuestPlayerController;
 import at.haha007.edenquests.quest.Quest;
 import at.haha007.edenquests.quest.QuestType;
+import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.text.Component;
@@ -27,7 +28,10 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -63,12 +67,12 @@ public class QuestCommand {
                 .createYamlPipeline(new File(plugin.getDataFolder(), "config.yml"))
                 .inject(this);
 
-        LiteralCommandNode cmd = CommandRegistry.literal("quest");
+        LiteralCommandNode.LiteralCommandBuilder cmd = CommandRegistry.literal("quest");
         cmd.executor(context -> {
             if (!(context.sender() instanceof Player player)) return;
             defaultMessage.accept(player);
         });
-        Argument<Quest> questArgument = new Argument<>() {
+        Argument<Quest> questArgument = new Argument<>(c -> plugin.questMap().keySet().stream().map(AsyncTabCompleteEvent.Completion::completion).toList(),true) {
             @Override
             public @NotNull ParsedArgument<Quest> parse(CommandContext context) throws CommandException {
                 Quest quest = plugin.questMap().get(context.input()[context.pointer()]);
@@ -76,12 +80,11 @@ public class QuestCommand {
                 return new ParsedArgument<>(quest, 1);
             }
         };
-        questArgument.tabCompleter(c -> new ArrayList<>(plugin.questMap().keySet()));
 
         //default commands
         cmd.then(CommandRegistry.literal("get").requires(Predicate.not(this::hasQuest)).executor(this::getQuest));
         cmd.then(CommandRegistry.literal("done").requires(this::hasCollectQuest).executor(this::questDone));
-        cmd.then(CommandRegistry.literal("info").requires(this::canSkip).executor(this::questInfo));
+        cmd.then(CommandRegistry.literal("info").requires(this::hasQuest).executor(this::questInfo));
         cmd.then(CommandRegistry.literal("skip").requires(this::hasQuest).executor(this::skipQuest));
 
         //management commands
@@ -96,13 +99,18 @@ public class QuestCommand {
                     plugin.questPlayerController().resetAll();
                     c.sender().sendMessage(Component.text("[Quests] All players were reset!", NamedTextColor.GOLD));
                 }))
-                .then(CommandRegistry.argument("player", PlayerArgument.offlinePlayer(Component.text("player not found", NamedTextColor.GOLD))).executor(c -> {
+                .then(CommandRegistry.argument("player", OfflinePlayerArgument.builder()
+                                .playerNotFoundErrorProvider(c -> Component.text("player not found", NamedTextColor.GOLD))
+                                .build())
+                        .executor(c -> {
                     plugin.questPlayerController().reset(c.<OfflinePlayer>parameter("player").getUniqueId());
                     c.sender().sendMessage(Component.text("[Quests] Player was reset!", NamedTextColor.GOLD));
                 })).executor(c -> c.sender().sendMessage(Component.text("/quest reset <player>", NamedTextColor.GOLD)))
         );
         cmd.then(CommandRegistry.literal("assign").requires(CommandRegistry.permission("quest.command.assign"))
-                .then(CommandRegistry.argument("player", PlayerArgument.offlinePlayer(Component.text("player not found", NamedTextColor.GOLD)))
+                .then(CommandRegistry.argument("player", OfflinePlayerArgument.builder()
+                                .playerNotFoundErrorProvider(c -> Component.text("player not found", NamedTextColor.GOLD))
+                                .build())
                         .then(CommandRegistry.argument("quest", questArgument).executor(c -> {
                             OfflinePlayer op = c.parameter("player");
                             Quest quest = c.parameter("quest");
@@ -115,7 +123,7 @@ public class QuestCommand {
         );
 
         cmd.requires(CommandRegistry.permission("quest.command.use"));
-        registry.register(cmd);
+        registry.register(cmd.build());
     }
 
     private boolean canSkip(CommandSender sender) {

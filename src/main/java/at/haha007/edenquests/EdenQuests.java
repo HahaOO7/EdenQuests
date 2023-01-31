@@ -154,7 +154,7 @@ public final class EdenQuests extends JavaPlugin {
         cfg.set("password", "");
         cfg.set("path", "data.db");
         cfg.set("format", "sqlite");
-        hibernateProvider = new EdenHibernate(this, List.of(QuestPlayer.class), true, Map.of(), cfg);
+        hibernateProvider = new EdenHibernate(this, List.of(QuestPlayer.class), cfg.getBoolean("debug", false), Map.of(), cfg);
         questPlayerController = new QuestPlayerController(hibernateProvider.factory());
     }
 

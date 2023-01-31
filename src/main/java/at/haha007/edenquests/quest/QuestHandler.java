@@ -51,9 +51,9 @@ public class QuestHandler implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     void onMobKill(EntityDamageByEntityEvent event) {
         Entity damager = event.getDamager();
-        if (!(damager instanceof Player player)) return;
         if (damager instanceof Arrow arrow && arrow.getShooter() instanceof Entity entity)
             damager = entity;
+        if (!(damager instanceof Player player)) return;
 
         Entity entity = event.getEntity();
         if (!(entity instanceof Damageable damageable))

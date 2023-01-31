@@ -1,10 +1,20 @@
 {
+  "relocations": [
+    {
+      "pattern": "at.haha007.edencommands",
+      "shadedPattern": "at.haha007.edenquests.edencommands",
+      "includes": [
+      ],
+      "excludes": [
+      ]
+    }
+  ],
   "dependencies": [
     {
       "repository": "https://jitpack.io/",
       "group": "com.github.EdenUnited",
       "artifact": "EdenCommands",
-      "version": "2.2"
+      "version": "2.3"
     }
   ]
 }

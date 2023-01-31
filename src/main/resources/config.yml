@@ -1,6 +1,7 @@
 timeOffset: -60
 maxDailyQuests: 3
 maxSkips: 1
+debug: false
 defaultMessage:
   chat: "&aUse &b/quest get&a to get the next quest."
 skipMessage:
