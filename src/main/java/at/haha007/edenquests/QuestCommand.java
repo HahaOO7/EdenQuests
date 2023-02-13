@@ -85,7 +85,7 @@ public class QuestCommand {
         cmd.then(CommandRegistry.literal("get").requires(Predicate.not(this::hasQuest)).executor(this::getQuest));
         cmd.then(CommandRegistry.literal("done").requires(this::hasCollectQuest).executor(this::questDone));
         cmd.then(CommandRegistry.literal("info").requires(this::hasQuest).executor(this::questInfo));
-        cmd.then(CommandRegistry.literal("skip").requires(this::hasQuest).executor(this::skipQuest));
+        cmd.then(CommandRegistry.literal("skip").requires(this::canSkip).executor(this::skipQuest));
 
         //management commands
         cmd.then(CommandRegistry.literal("reload").requires(CommandRegistry.permission("quest.command.reload")).executor(

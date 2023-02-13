@@ -2,11 +2,7 @@
   "relocations": [
     {
       "pattern": "at.haha007.edencommands",
-      "shadedPattern": "at.haha007.edenquests.edencommands",
-      "includes": [
-      ],
-      "excludes": [
-      ]
+      "shadedPattern": "at.haha007.edenquests.edencommands"
     }
   ],
   "dependencies": [
